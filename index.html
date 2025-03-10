@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chatbot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <!-- Sidebar for Saved Chats -->
+    <div id="sidebar">
+        <h2>Saved Chats</h2>
+        <div id="saved-chats"></div>
+        <button id="new-chat-btn">+ New Chat</button>
+    </div>
+
+    <!-- Main Chat Container -->
+    <div id="chat-container">
+        <div id="chatbox"></div>
+        <div id="chat-input">
+            <input type="text" id="user-input" placeholder="Ask me anything...">
+            <button id="send-btn">Send</button>
+        </div>
+    </div>
+
+    <!-- Settings Button -->
+    <button id="settings-btn">⚙️</button>
+
+    <!-- Settings Menu -->
+    <div id="settings-menu" class="hidden">
+        <label>Theme:</label>
+        <select id="theme-selector">
+            <option value="dark">Dark Mode</option>
+            <option value="light">Light Mode</option>
+        </select>
+        
+        <label>Model:</label>
+        <select id="model-selector"></select>
+
+        <button id="factory-reset-btn">Factory Reset</button>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+</body>
+</html>
