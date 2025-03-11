@@ -10,7 +10,7 @@ DEFAULT_MODEL = "gemini-1.5-pro-latest"
 MODEL_NAME = DEFAULT_MODEL
 
 # Set up Gemini API key
-genai.configure(api_key="AIzaSyD887ELaR30ZQHvaDuLE8zAB7TJN5VrHr0")  # Replace with your actual key
+genai.configure(api_key="AIzaSyD887ELaR30ZQHvaDuLE8zAB7TJN5VrHr0")
 
 @app.route("/")
 def index():
@@ -47,4 +47,5 @@ def chat():
     return jsonify({"response": ai_reply})
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))  # Get PORT from environment
+    app.run(host="0.0.0.0", port=port, debug=True)
