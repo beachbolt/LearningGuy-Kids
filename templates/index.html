@@ -2,46 +2,58 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Chatbot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Genie</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
-    <!-- Sidebar for Saved Chats -->
+    <!-- Chat Messages Section -->
+    <div id="chat-messages"></div> <!-- ✅ FIXED ID from "chatbox" to "chat-messages" -->
+
+    <!-- Scroll to Bottom Button -->
+    <button id="scroll-button" style="display: none;">⬇ Scroll to Bottom</button>
+
+    <!-- Sidebar -->
     <div id="sidebar">
+        <button id="close-sidebar">X</button>
         <h2>Saved Chats</h2>
         <div id="saved-chats"></div>
-        <button id="new-chat-btn">+ New Chat</button>
     </div>
 
-    <!-- Main Chat Container -->
+    <!-- Chat Container -->
     <div id="chat-container">
-        <div id="chatbox"></div>
+        
+        <!-- Chat Input -->
         <div id="chat-input">
-            <input type="text" id="user-input" placeholder="Ask me anything...">
+            <input type="text" id="user-input" placeholder="Type a message...">
             <button id="send-btn">Send</button>
+        </div>
+        
+        <!-- Chat Buttons -->
+        <div id="chat-buttons">
+            <button id="save-chat-btn">Save Chat</button>
+            <button id="load-chat-btn">Load Chat</button>
+            <button id="new-chat-btn">New Chat</button>
         </div>
     </div>
 
     <!-- Settings Button -->
-    <button id="settings-btn">⚙️</button>
+    <button id="settings-btn">⚙</button>
 
     <!-- Settings Menu -->
-    <div id="settings-menu" class="hidden">
-        <label>Theme:</label>
-        <select id="theme-selector">
-            <option value="dark">Dark Mode</option>
-            <option value="light">Light Mode</option>
-        </select>
-        
-        <label>Model:</label>
-        <select id="model-selector"></select>
-
-        <button id="factory-reset-btn">Factory Reset</button>
+    <div id="settings-box">
+        <div class="settings-option" id="theme-toggle">Toggle Dark/Light Mode</div>
+        <div class="settings-option">
+            <label for="model-select">Choose Model:</label>
+            <select id="model-select">
+                <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro</option>
+                <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                <option value="gemini-1.0">Gemini 1.0</option>
+            </select>
+        </div>
     </div>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
-
 </body>
 </html>
