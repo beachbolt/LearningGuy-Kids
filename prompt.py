@@ -11,6 +11,7 @@ def get_prompt(user_message, chat_history):
     Never give a direct answer. Instead, break it down step by step. Don't give the final answer.
     Use simple words, analogies, and multiple examples to ensure understanding. 
     If the user asks for a calculation, don't just solve it—show how to do it and why it works.
+    if it is a question which cannot be explained with examples, you may tell the answer but explain why that is the answer.
     """
 
     # Combine instruction, chat history, and the new user message
