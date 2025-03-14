@@ -2,43 +2,51 @@ from flask import Flask, render_template, request, jsonify, session
 import google.generativeai as genai
 from prompt import get_prompt
 
-app = Flask(__name__, template_folder="templates", static_folder="static")
-app.secret_key = "your_secret_key_here"  # Needed for session storage
+app = Flask(__name__)
+app.secret_key = "your_random_secret_key_here"
 
 # Default model
 DEFAULT_MODEL = "gemini-1.5-pro-latest"
 MODEL_NAME = DEFAULT_MODEL
 
-# Set up Gemini API key
+# Set up Gemini API key (Example key provided)
 genai.configure(api_key="AIzaSyAzZPGoHjWG6Bf2hdroOZmVYb-7LKC0MTg")
 
 @app.route("/")
 def index():
     session.clear()  # Clear chat history when user reloads the page
-    return render_template("index.html", default_model=MODEL_NAME)
+    return render_template("index.html")
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    global MODEL_NAME
     data = request.json
     user_message = data.get("message", "").strip()
-    selected_model = data.get("model", DEFAULT_MODEL)
 
-    # Update model if changed
-    if selected_model != MODEL_NAME:
-        MODEL_NAME = selected_model
+    if "grade_level" not in session:
+        if user_message.isdigit() and 1 <= int(user_message) <= 12:
+            session["grade_level"] = int(user_message)
+            grade_level = session.get("grade_level")
+            return jsonify({"response": f"Great! I'll help you with {grade_level}th-grade level explanations. What do you want to learn today?"})
+        else:
+            return jsonify({"response": "Hello! Before we start, what grade are you in? Provide a value between 1-12."})
+    
+ 
+    grade_level = session.get("grade_level")
 
-    # Load chat history from session
     if "chat_history" not in session:
         session["chat_history"] = []  # Initialize chat history
 
     chat_history = session["chat_history"]
 
-    # Generate a refined prompt using the chat history
-    refined_prompt = get_prompt(user_message, chat_history)
+    # Call the prompt function with the stored grade level
+    from prompt import get_prompt
+    
+    chat_history.append({"role": "user", "content": user_message})
+
+    refined_prompt = get_prompt(chat_history,grade_level)
 
     try:
-        # Call Gemini API with the generated prompt
+      # Call Gemini API with the generated prompt
         model = genai.GenerativeModel(MODEL_NAME)
         response = model.generate_content(refined_prompt)
 
@@ -46,16 +54,13 @@ def chat():
         ai_reply = response.text if hasattr(response, "text") and response.text else "Error: No response from AI."
 
         # Update chat history
-        chat_history.append({"user": user_message, "bot": ai_reply})
+        chat_history.append({"role": "ai_bot", "content": ai_reply})
         session["chat_history"] = chat_history  # Save updated history
 
     except Exception as e:
-        ai_reply = f"Error: {str(e)}"
+        ai_reply  = f"Oops! Something went wrong. Try again...{e}"
 
-    return jsonify({"response": ai_reply})
-
-import os
+    return jsonify({"response": ai_reply })
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # Use the PORT environment variable if available, otherwise default to 5000
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(debug=True, host="0.0.0.0", port=5000)  # Specify port 5000
