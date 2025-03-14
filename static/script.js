@@ -1,204 +1,195 @@
 document.addEventListener("DOMContentLoaded", function () {
-    const chatbox = document.getElementById("chatbox");
+    console.log("✅ Script loaded"); // Debugging
+
+    // ✅ DOM Elements
+    const chatbox = document.getElementById("chat-messages");
     const userInput = document.getElementById("user-input");
     const sendBtn = document.getElementById("send-btn");
-    const savedChats = document.getElementById("saved-chats");
+    const saveChatBtn = document.getElementById("save-chat-btn");
+    const loadChatBtn = document.getElementById("load-chat-btn");
     const newChatBtn = document.getElementById("new-chat-btn");
     const settingsBtn = document.getElementById("settings-btn");
-    const settingsMenu = document.getElementById("settings-menu");
-    const darkModeToggle = document.getElementById("dark-mode-toggle");
+    const settingsBox = document.getElementById("settings-box");
+    const sidebar = document.getElementById("sidebar");
+    const closeSidebar = document.getElementById("close-sidebar");
+    const savedChatsDiv = document.getElementById("saved-chats");
     const modelSelect = document.getElementById("model-select");
-    const factoryResetBtn = document.getElementById("factory-reset-btn");
+    const scrollButton = document.getElementById("scroll-button");
 
-    let chatSessions = JSON.parse(localStorage.getItem("chatSessions")) || {};
-    let chatCount = Object.keys(chatSessions).length;
-    let currentChatId = Object.keys(chatSessions)[0] || createNewChat(true);
-    let isProcessing = false; // Prevent multiple messages at once
-
-    function saveCurrentChat() {
-        if (currentChatId && chatSessions[currentChatId]) {
-            chatSessions[currentChatId].messages = Array.from(chatbox.children).map(msg => ({
-                sender: msg.classList.contains("user-message") ? "You" : "AI",
-                message: msg.textContent
-            }));
-            localStorage.setItem("chatSessions", JSON.stringify(chatSessions));
-        }
+    if (!chatbox || !userInput || !sendBtn) {
+        console.error("❌ One or more elements not found! Check IDs in HTML.");
+        return;
     }
 
-    function loadSavedChats() {
-        savedChats.innerHTML = "";
-        Object.keys(chatSessions).forEach(chatId => {
-            const chatItem = document.createElement("div");
-            chatItem.classList.add("chat-item");
+    let currentChat = [];
+    let savedChats = JSON.parse(localStorage.getItem("savedChats")) || [];
 
-            const chatName = document.createElement("span");
-            chatName.textContent = chatSessions[chatId].name;
-            chatName.dataset.chatId = chatId;
-            chatName.addEventListener("click", function () {
-                saveCurrentChat();
-                loadChat(chatId);
-            });
+    /** ✅ Function to Add Messages in Speech Bubbles */
+    function addMessage(text, sender, animated = false) {
+        if (!text) return;
+        
+        console.log(`📩 Adding message: ${text} (${sender})`); // Debugging
 
-            const deleteBtn = document.createElement("button");
-            deleteBtn.textContent = "🗑️";
-            deleteBtn.classList.add("delete-btn");
-            deleteBtn.addEventListener("click", function (event) {
-                event.stopPropagation();
-                deleteChat(chatId);
-            });
-
-            chatItem.appendChild(chatName);
-            chatItem.appendChild(deleteBtn);
-            savedChats.appendChild(chatItem);
-        });
-    }
-
-    function deleteChat(chatId) {
-        if (confirm("Are you sure you want to delete this chat?")) {
-            delete chatSessions[chatId];
-            localStorage.setItem("chatSessions", JSON.stringify(chatSessions));
-            loadSavedChats();
-            if (currentChatId === chatId) {
-                chatbox.innerHTML = "";
-                currentChatId = Object.keys(chatSessions)[0] || createNewChat(true);
-                if (currentChatId) loadChat(currentChatId);
-            }
-        }
-    }
-
-    function factoryReset() {
-        if (confirm("This will delete ALL chats. Are you sure?")) {
-            localStorage.removeItem("chatSessions");
-            chatSessions = {};
-            chatCount = 0;
-            chatbox.innerHTML = "";
-            createNewChat();
-            loadSavedChats();
-        }
-    }
-
-    function appendMessage(sender, message, animate = false) {
         const messageDiv = document.createElement("div");
-        messageDiv.classList.add("message", sender === "You" ? "user-message" : "ai-message");
-        chatbox.appendChild(messageDiv);
+        messageDiv.classList.add("message", sender);
 
-        if (animate) {
+        if (animated) {
             let i = 0;
             function typeLetter() {
-                if (i < message.length) {
-                    messageDiv.textContent += message.charAt(i);
+                if (i < text.length) {
+                    messageDiv.innerHTML += text.charAt(i);
                     i++;
                     setTimeout(typeLetter, 30);
                 }
             }
             typeLetter();
         } else {
-            messageDiv.textContent = message;
+            messageDiv.innerText = text;
         }
 
-        chatbox.scrollTop = chatbox.scrollHeight;
+        chatbox.appendChild(messageDiv);
+        scrollToBottom();
     }
 
-    function loadChat(chatId) {
-        if (!chatSessions[chatId]) return;
+    /** ✅ Typing Animation */
+    function showTypingAnimation() {
+        console.log("⏳ Showing typing animation..."); // Debugging
 
-        currentChatId = chatId;
-        chatbox.innerHTML = "";
-
-        chatSessions[chatId].messages.forEach(entry => {
-            appendMessage(entry.sender, entry.message);
-        });
-
-        localStorage.setItem("chatSessions", JSON.stringify(chatSessions));
+        const typingDiv = document.createElement("div");
+        typingDiv.classList.add("message", "ai-message", "typing");
+        typingDiv.innerHTML = "<span></span><span></span><span></span>";
+        chatbox.appendChild(typingDiv);
+        scrollToBottom();
+        return typingDiv;
     }
 
-    function createNewChat(isFirst = false) {
-        saveCurrentChat();
+    /** ✅ Send Message & Get AI Response */
+    function sendMessage() {
+        console.log("📨 Sending message..."); // Debugging
 
-        chatCount++;
-        const chatId = Date.now().toString();
-        chatSessions[chatId] = {
-            name: `Chat ${chatCount}`,
-            messages: []
-        };
-        currentChatId = chatId;
+        const text = userInput.value.trim();
+        if (!text) {
+            console.warn("⚠️ Empty message! Ignoring...");
+            return;
+        }
 
-        localStorage.setItem("chatSessions", JSON.stringify(chatSessions));
-        loadSavedChats();
+        addMessage(text, "user-message");
+        currentChat.push({ role: "user", content: text });
 
-        chatbox.innerHTML = "";
-        return chatId;
-    }
-
-    sendBtn.addEventListener("click", function () {
-        if (isProcessing) return; // Stop multiple messages at once
-        isProcessing = true; // Lock input
-
-        const message = userInput.value.trim();
-        if (message === "") return;
-
-        appendMessage("You", message);
-        userInput.value = "";
-        userInput.disabled = true; // Disable input
-        sendBtn.disabled = true; // Disable send button
-
-        appendMessage("AI", "Typing...", false);
+        const typingDiv = showTypingAnimation();
+        const selectedModel = modelSelect.value;
 
         fetch("/chat", {
             method: "POST",
-            body: JSON.stringify({ message }),
+            body: JSON.stringify({ message: text, model: selectedModel }),
             headers: { "Content-Type": "application/json" }
         })
         .then(response => response.json())
         .then(data => {
-            chatbox.lastChild.remove();
-            appendMessage("AI", data.response, true);
+            chatbox.removeChild(typingDiv);
+
+            const aiResponse = data.response?.trim();
+            if (aiResponse) {
+                addMessage(aiResponse, "ai-message", true);
+                currentChat.push({ role: "ai", content: aiResponse });
+            } else {
+                addMessage("I'm sorry, I didn't understand that.", "ai-message", true);
+            }
         })
         .catch(error => {
-            console.error("Error:", error);
-            chatbox.lastChild.remove();
-            appendMessage("AI", "Error: Could not connect to the server.");
-        })
-        .finally(() => {
-            isProcessing = false; // Unlock input
-            userInput.disabled = false; // Enable input
-            sendBtn.disabled = false; // Enable button
-            userInput.focus(); // Focus input again
+            console.error("❌ Fetch error:", error);
+            chatbox.removeChild(typingDiv);
+            addMessage("Error: Unable to get a response.", "ai-message");
         });
+
+        userInput.value = "";
+    }
+
+    /** ✅ Attach Event Listeners */
+    sendBtn.addEventListener("click", function () {
+        console.log("🖱️ Send button clicked!");
+        sendMessage();
     });
 
-    newChatBtn.addEventListener("click", function () {
-        createNewChat();
-        chatbox.innerHTML = "";
-    });
-
-    userInput.addEventListener("keypress", function (event) {
-        if (event.key === "Enter") sendBtn.click();
-    });
-
-    factoryResetBtn.addEventListener("click", factoryReset);
-
-    // Dark Mode Toggle
-    darkModeToggle.addEventListener("change", function () {
-        if (darkModeToggle.checked) {
-            document.body.classList.add("dark-mode");
-            localStorage.setItem("darkMode", "enabled");
-        } else {
-            document.body.classList.remove("dark-mode");
-            localStorage.setItem("darkMode", "disabled");
+    userInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+            console.log("⌨️ Enter key pressed!");
+            e.preventDefault(); // Prevents unintended form submission
+            sendMessage();
         }
     });
 
-    if (localStorage.getItem("darkMode") === "enabled") {
-        document.body.classList.add("dark-mode");
-        darkModeToggle.checked = true;
-    }
+    /** ✅ Save Chat */
+    saveChatBtn.addEventListener("click", function () {
+        if (currentChat.length === 0) return;
 
-    // Settings Button Toggle
-    settingsBtn.addEventListener("click", function () {
-        settingsMenu.classList.toggle("visible");
+        const chatString = JSON.stringify(currentChat);
+        if (!savedChats.some(chat => JSON.stringify(chat) === chatString)) {
+            savedChats.push(currentChat);
+            localStorage.setItem("savedChats", JSON.stringify(savedChats));
+        }
+        alert("💾 Chat saved!");
     });
 
-    loadSavedChats();
-    if (currentChatId) loadChat(currentChatId);
+    /** ✅ Load Chats */
+    loadChatBtn.addEventListener("click", function () {
+        sidebar.classList.add("show");
+        savedChatsDiv.innerHTML = "";
+
+        savedChats.forEach((chat, index) => {
+            const chatItem = document.createElement("div");
+            chatItem.classList.add("chat-item");
+            chatItem.innerText = `Chat ${index + 1}`;
+
+            chatItem.addEventListener("click", function () {
+                chatbox.innerHTML = "";
+                currentChat = chat;
+                chat.forEach(msg => addMessage(msg.content, msg.role === "user" ? "user-message" : "ai-message"));
+            });
+
+            savedChatsDiv.appendChild(chatItem);
+        });
+    });
+
+    /** ✅ Close Sidebar */
+    closeSidebar.addEventListener("click", function () {
+        sidebar.classList.remove("show");
+    });
+
+    /** ✅ Start a New Chat */
+    newChatBtn.addEventListener("click", function () {
+        if (currentChat.length > 0 && !confirm("Start a new chat? Unsaved messages will be lost.")) return;
+        chatbox.innerHTML = "";
+        currentChat = [];
+    });
+
+    /** ✅ Toggle Settings */
+    settingsBtn.addEventListener("click", function () {
+        settingsBox.style.display = settingsBox.style.display === "none" ? "block" : "none";
+    });
+
+    /** ✅ Auto-Scroll to Bottom */
+    function scrollToBottom() {
+        chatbox.scrollTop = chatbox.scrollHeight;
+    }
+
+    /** ✅ Detect Scrolling to Show Scroll Button */
+    chatbox.addEventListener("scroll", function () {
+        if (chatbox.scrollTop < chatbox.scrollHeight - chatbox.clientHeight - 100) {
+            scrollButton.style.display = "block";
+        } else {
+            scrollButton.style.display = "none";
+        }
+    });
+
+    /** ✅ Scroll to Bottom when Button Clicked */
+    scrollButton.addEventListener("click", function () {
+        chatbox.scrollTop = chatbox.scrollHeight;
+    });
+
+    /** ✅ Observe for New Messages */
+    const observer = new MutationObserver(scrollToBottom);
+    observer.observe(chatbox, { childList: true });
+
+    console.log("✅ Script setup complete!");
 });
