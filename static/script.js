@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-    console.log("✅ Script loaded"); // Debugging
+    console.log("✅ Script loaded");
 
     // ✅ DOM Elements
     const chatbox = document.getElementById("chat-messages");
@@ -24,14 +24,40 @@ document.addEventListener("DOMContentLoaded", function () {
     let currentChat = [];
     let savedChats = JSON.parse(localStorage.getItem("savedChats")) || [];
 
+    /** ✅ Disable and Enable Input */
+    function disableInput() {
+        userInput.disabled = true;
+        sendBtn.disabled = true;
+        console.log("✋ Input disabled");
+    }
+
+    function enableInput() {
+        userInput.disabled = false;
+        sendBtn.disabled = false;
+        console.log("✅ Input enabled");
+    }
+
     /** ✅ Function to Add Messages in Speech Bubbles */
-    function addMessage(text, sender, animated = false) {
+    function addMessage(text, sender, animated = false) {        
         if (!text) return;
         
-        console.log(`📩 Adding message: ${text} (${sender})`); // Debugging
+        console.log(`📩 Adding message: ${text} (${sender})`);
 
         const messageDiv = document.createElement("div");
         messageDiv.classList.add("message", sender);
+
+        // ✅ Display GIF if the user asks for the answer
+        if (sender === "ai-message" && text.toLowerCase().includes("reaction gif")) {
+            console.log("🎉 Showing GIF response!");
+            const gifImg = document.createElement("img");
+            gifImg.src = "/static/giphy.gif"; // Adjusted path to ensure correct loading
+            gifImg.alt = "Reaction GIF";
+            gifImg.style.width = "200px"; // Adjust size if needed
+            messageDiv.appendChild(gifImg);
+            chatbox.appendChild(messageDiv);
+            scrollToBottom();
+            return;
+        }
 
         if (animated) {
             let i = 0;
@@ -53,7 +79,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     /** ✅ Typing Animation */
     function showTypingAnimation() {
-        console.log("⏳ Showing typing animation..."); // Debugging
+        console.log("⏳ Showing typing animation...");
 
         const typingDiv = document.createElement("div");
         typingDiv.classList.add("message", "ai-message", "typing");
@@ -65,8 +91,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     /** ✅ Send Message & Get AI Response */
     function sendMessage() {
-        console.log("📨 Sending message..."); // Debugging
-
+        console.log("📨 Sending message...");
+        
         const text = userInput.value.trim();
         if (!text) {
             console.warn("⚠️ Empty message! Ignoring...");
@@ -76,6 +102,16 @@ document.addEventListener("DOMContentLoaded", function () {
         addMessage(text, "user-message");
         currentChat.push({ role: "user", content: text });
 
+        // ✅ Check for GIF Trigger Words (User asks for the answer)
+        if (/(give me the answer|gimme the answer|i want the answer|tell me the answer|just give me the answer|can you tell me the answer|what’s the answer|show me the answer|reveal the answer|i need the answer|answer it for me|provide the answer|give me the correct answer|tell me what it is|let me know the answer|i can't figure it out, give me the answer|just tell me|spill the answer|what's the correct answer|tell me already|hurry up and give me the answer)/i.test(text)) {
+            console.log("🎉 User asked for the answer — Showing GIF!");
+            addMessage("reaction gif", "ai-message"); // Trigger GIF with updated logic
+            enableInput();
+            userInput.value = "";
+            return;
+        }
+
+        disableInput();
         const typingDiv = showTypingAnimation();
         const selectedModel = modelSelect.value;
 
@@ -95,26 +131,23 @@ document.addEventListener("DOMContentLoaded", function () {
             } else {
                 addMessage("I'm sorry, I didn't understand that.", "ai-message", true);
             }
+            enableInput();
         })
         .catch(error => {
             console.error("❌ Fetch error:", error);
             chatbox.removeChild(typingDiv);
             addMessage("Error: Unable to get a response.", "ai-message");
+            enableInput();
         });
 
         userInput.value = "";
     }
 
     /** ✅ Attach Event Listeners */
-    sendBtn.addEventListener("click", function () {
-        console.log("🖱️ Send button clicked!");
-        sendMessage();
-    });
-
+    sendBtn.addEventListener("click", sendMessage);
     userInput.addEventListener("keydown", function (e) {
         if (e.key === "Enter") {
-            console.log("⌨️ Enter key pressed!");
-            e.preventDefault(); // Prevents unintended form submission
+            e.preventDefault();
             sendMessage();
         }
     });
@@ -175,17 +208,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     /** ✅ Detect Scrolling to Show Scroll Button */
     chatbox.addEventListener("scroll", function () {
-        if (chatbox.scrollTop < chatbox.scrollHeight - chatbox.clientHeight - 100) {
-            scrollButton.style.display = "block";
-        } else {
-            scrollButton.style.display = "none";
-        }
+        scrollButton.style.display = (chatbox.scrollTop < chatbox.scrollHeight - chatbox.clientHeight - 100) ? "block" : "none";
     });
 
     /** ✅ Scroll to Bottom when Button Clicked */
-    scrollButton.addEventListener("click", function () {
-        chatbox.scrollTop = chatbox.scrollHeight;
-    });
+    scrollButton.addEventListener("click", scrollToBottom);
 
     /** ✅ Observe for New Messages */
     const observer = new MutationObserver(scrollToBottom);
