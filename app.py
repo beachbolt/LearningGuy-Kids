@@ -10,7 +10,7 @@ DEFAULT_MODEL = "gemini-1.5-pro-latest"
 MODEL_NAME = DEFAULT_MODEL
 
 # Set up Gemini API key (Example key provided)
-genai.configure(api_key="AIzaSyAzZPGoHjWG6Bf2hdroOZmVYb-7LKC0MTg")
+genai.configure(api_key="AIzaSyDwNmlPXZJAZ9FiAVqVD5t2ZNkVBYAsIEg")
 
 @app.route("/")
 def index():
