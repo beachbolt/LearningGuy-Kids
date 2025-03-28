@@ -23,5 +23,6 @@ Added a bug fix where the ai after hearing the wrong answer will tell the correc
 
 
 
-credits to Aaron for the gif and the main idea
+credits to Aaron for the gif 
+credits to Surya for the main idea
 credits to google for gemini model
