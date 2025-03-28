@@ -311,7 +311,7 @@ body {
 
 /* ✅ Speech Bubble Styling */
 .message {
-    max-width: 80%;
+    max-width: 1000%;
     padding: 10px 15px;
     border-radius: 15px;
     word-wrap: break-word;
