@@ -312,7 +312,7 @@ body {
 /* ✅ Speech Bubble Styling */
 .message {
     max-width: 1000%;
-    padding: 40px 60px;
+    padding: 5px 7.5px;
     border-radius: 16px;
     word-wrap: break-word;
     font-size: 16px;
