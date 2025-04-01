@@ -221,7 +221,7 @@ function addMessage(text, sender, animated = false) {
         }
     });
 
-    send-btn.addEventListener("click", sendMessage() )
+    sendBtn.addEventListener("click", sendMessage() )
 
     
     /** ✅ Mutation Observer for Chat Updates */
